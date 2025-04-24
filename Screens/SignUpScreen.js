@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../supabase';
@@ -34,11 +34,9 @@ const SignUpScreen = () => {
     }
 
     try {
-      // Đăng xuất bất kỳ session hiện có
       await supabase.auth.signOut();
       console.log('Signed out any existing session');
 
-      // Đăng ký người dùng
       console.log('Attempting to sign up:', { email, name });
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -56,7 +54,6 @@ const SignUpScreen = () => {
       const user = data.user;
       console.log('User ID:', user.id);
 
-      // Chèn dữ liệu vào bảng users
       console.log('Attempting to insert user:', { id: user.id, email, name });
       const { error: insertError } = await supabase
         .from('users')
@@ -67,10 +64,8 @@ const SignUpScreen = () => {
         throw insertError;
       }
 
-      // Lưu user_id vào AsyncStorage
       await AsyncStorage.setItem('user_id', user.id);
 
-      // Kiểm tra session
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       console.log('Session after signup:', sessionData, 'Session Error:', sessionError);
 
@@ -87,67 +82,69 @@ const SignUpScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
-      <Text style={styles.subtitle}>Create your account to get started</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Sign Up</Text>
+        <Text style={styles.subtitle}>Create your account to get started</Text>
 
-      <Text style={styles.label}>Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your name"
-        placeholderTextColor="#999"
-        value={name}
-        onChangeText={setName}
-        autoCapitalize="words"
-      />
+        <Text style={styles.label}>Name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your name"
+          placeholderTextColor="#999"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+        />
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="example@gmail.com"
-        placeholderTextColor="#999"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="example@gmail.com"
+          placeholderTextColor="#999"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
 
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="************"
-        placeholderTextColor="#999"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="************"
+          placeholderTextColor="#999"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-      <View style={styles.checkboxContainer}>
-        <TouchableOpacity
-          style={[styles.checkbox, agree && styles.checkboxChecked]}
-          onPress={() => setAgree(!agree)}
-        >
-          {agree && <Text style={styles.checkmark}>✔</Text>}
-        </TouchableOpacity>
-        <Text style={styles.checkboxText}> Agree with Terms and Conditions</Text>
-      </View>
-
-      <TouchableOpacity onPress={handleSignUp} style={styles.signUpButton}>
-        <Text style={styles.signUpButtonText}>Sign Up</Text>
-      </TouchableOpacity>
-
-      <View style={styles.signInPrompt}>
-        <Text style={styles.signInPromptText}>
-          Already have an account?{' '}
-          <Text
-            style={styles.signInLink}
-            onPress={() => navigation.navigate('SignIn')}
+        <View style={styles.checkboxContainer}>
+          <TouchableOpacity
+            style={[styles.checkbox, agree && styles.checkboxChecked]}
+            onPress={() => setAgree(!agree)}
           >
-            Sign In
+            {agree && <Text style={styles.checkmark}>✔</Text>}
+          </TouchableOpacity>
+          <Text style={styles.checkboxText}> Agree with Terms and Conditions</Text>
+        </View>
+
+        <TouchableOpacity onPress={handleSignUp} style={styles.signUpButton}>
+          <Text style={styles.signUpButtonText}>Sign Up</Text>
+        </TouchableOpacity>
+
+        <View style={styles.signInPrompt}>
+          <Text style={styles.signInPromptText}>
+            Already have an account?{' '}
+            <Text
+              style={styles.signInLink}
+              onPress={() => navigation.navigate('SignIn')}
+            >
+              Sign In
+            </Text>
           </Text>
-        </Text>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 

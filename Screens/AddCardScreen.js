@@ -23,9 +23,8 @@ const AddCardScreen = () => {
   const [cvv, setCvv] = useState('');
   const [saveCard, setSaveCard] = useState(true);
   const [cartItems, setCartItems] = useState([]);
-  const [shippingType] = useState('Economy'); // Translated from 'Tiết kiệm' to 'Economy'
+  const [shippingType] = useState('Economy');
 
-  // Fetch cart items when the screen loads
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
@@ -67,7 +66,6 @@ const AddCardScreen = () => {
 
   const saveCardInfo = async () => {
     try {
-      // Validate card information
       if (!cardHolder || !cardNumber || !expiryDate || !cvv) {
         Alert.alert('Error', 'Please fill in all card information.');
         return;
@@ -89,7 +87,6 @@ const AddCardScreen = () => {
         return;
       }
 
-      // Save card information to AsyncStorage (if needed)
       if (saveCard) {
         const cardInfo = {
           cardHolder,
@@ -101,13 +98,11 @@ const AddCardScreen = () => {
         console.log('Card information saved:', cardInfo);
       }
 
-      // Calculate total amount
       const totalAmount = cartItems.reduce(
         (sum, item) => sum + item.products.price * item.quantity,
         0
       );
 
-      // Get user_id from the session
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user) {
         Alert.alert('Error', 'Unable to authenticate user.');
@@ -115,7 +110,6 @@ const AddCardScreen = () => {
       }
       const userId = userData.user.id;
 
-      // Create a new order in the orders table
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert([
@@ -136,7 +130,6 @@ const AddCardScreen = () => {
 
       const orderId = orderData.id;
 
-      // Create order details in the order_items table
       const orderItems = cartItems.map((item) => ({
         order_id: orderId,
         product_id: item.product_id,
@@ -156,7 +149,6 @@ const AddCardScreen = () => {
         return;
       }
 
-      // Clear the user's cart after successful payment
       const { error: deleteCartError } = await supabase
         .from('cart')
         .delete()
@@ -168,7 +160,6 @@ const AddCardScreen = () => {
         return;
       }
 
-      // Navigate to PaymentSuccessScreen
       navigation.navigate('PaymentSuccess');
     } catch (error) {
       console.error('Error saving card or creating order:', error);
@@ -176,7 +167,6 @@ const AddCardScreen = () => {
     }
   };
 
-  // Format card number display (add spaces after every 4 digits)
   const formatCardNumber = (number) => {
     return number.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim();
   };
@@ -195,8 +185,10 @@ const AddCardScreen = () => {
         <Text style={styles.headerTitle}>Add Card</Text>
         <View style={{ width: 24 }} />
       </View>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Card display section */}
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.cardContainer}>
           <View style={styles.card}>
             <Text style={styles.visaLogo}>VISA</Text>
@@ -220,7 +212,6 @@ const AddCardScreen = () => {
           </View>
         </View>
 
-        {/* Card information input form */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Cardholder Name</Text>
           <TextInput

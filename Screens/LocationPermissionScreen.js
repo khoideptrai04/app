@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -121,6 +121,7 @@ const LocationPermissionScreen = () => {
 
   return (
     <View style={styles.container}>
+       <Image source={require('../assets/location-logo.png')} style={styles.logo} />
       <Text style={styles.title}>What is Your Location?</Text>
       <Text style={styles.subtitle}>
         We need to know your location in order to suggest nearby services.
@@ -171,6 +172,12 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     marginBottom: 24,
+  },
+  logo: {
+    width: 64,
+    height: 84,
+    marginBottom: 24,
+    resizeMode: 'contain',
   },
   button: {
     backgroundColor: '#704F38',

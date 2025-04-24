@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../supabase';
@@ -22,7 +22,6 @@ const SignInScreen = () => {
     }
 
     try {
-      // Đăng nhập
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -36,10 +35,8 @@ const SignInScreen = () => {
       const user = data.user;
       console.log('User ID:', user.id);
 
-      // Lưu user_id
       await AsyncStorage.setItem('user_id', user.id);
 
-      // Kiểm tra session
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       console.log('Session after signin:', sessionData, 'Session Error:', sessionError);
 
@@ -47,7 +44,6 @@ const SignInScreen = () => {
         throw new Error('No session found after signin');
       }
 
-      // Kiểm tra dữ liệu người dùng
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('phone_number, gender')
@@ -56,7 +52,6 @@ const SignInScreen = () => {
 
       if (userError) {
         console.error('Error fetching user data:', userError);
-        // Nếu bản ghi chưa tồn tại, chuyển đến CompleteProfile
         if (userError.code === 'PGRST116') {
           navigation.navigate('CompleteProfile');
           return;
@@ -64,7 +59,6 @@ const SignInScreen = () => {
         throw userError;
       }
 
-      // Điều hướng dựa trên hồ sơ
       if (!userData.phone_number || !userData.gender) {
         console.log('Profile incomplete, navigating to CompleteProfile');
         navigation.navigate('CompleteProfile');
@@ -80,47 +74,49 @@ const SignInScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
-      <Text style={styles.subtitle}>Welcome back! Sign in to continue</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Sign In</Text>
+        <Text style={styles.subtitle}>Welcome back! Sign in to continue</Text>
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="example@gmail.com"
-        placeholderTextColor="#999"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="example@gmail.com"
+          placeholderTextColor="#999"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
 
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="************"
-        placeholderTextColor="#999"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="************"
+          placeholderTextColor="#999"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-      <TouchableOpacity onPress={handleSignIn} style={styles.signInButton}>
-        <Text style={styles.signInButtonText}>Sign In</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleSignIn} style={styles.signInButton}>
+          <Text style={styles.signInButtonText}>Sign In</Text>
+        </TouchableOpacity>
 
-      <View style={styles.signUpPrompt}>
-        <Text style={styles.signUpPromptText}>
-          Don’t have an account?{' '}
-          <Text
-            style={styles.signUpLink}
-            onPress={() => navigation.navigate('SignUp')}
-          >
-            Sign Up
+        <View style={styles.signUpPrompt}>
+          <Text style={styles.signUpPromptText}>
+            Don’t have an account?{' '}
+            <Text
+              style={styles.signUpLink}
+              onPress={() => navigation.navigate('SignUp')}
+            >
+              Sign Up
+            </Text>
           </Text>
-        </Text>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 

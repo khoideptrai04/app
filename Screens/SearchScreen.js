@@ -9,6 +9,8 @@ import {
   Image,
   SafeAreaView,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -258,54 +260,58 @@ const SearchScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack}>
-          <Ionicons name="chevron-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.searchInput}
-          value={searchQuery}
-          onChangeText={handleSearch}
-          placeholder="Search products..."
-          placeholderTextColor="#888"
-          autoFocus={true}
-        />
-      </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleGoBack}>
+            <Ionicons name="chevron-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={handleSearch}
+            placeholder="Search products..."
+            placeholderTextColor="#888"
+            autoFocus={true}
+          />
+        </View>
 
-      {showResults ? (
-        <View style={styles.resultsContainer}>
-          <Text style={styles.resultsTitle}>
-            Result for '{searchQuery}'{' '}
-            <Text style={styles.resultsCount}>({searchResults.length} found)</Text>
-          </Text>
-          <FlatList
-            data={searchResults}
-            renderItem={renderSearchResult}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.resultsList}
-            key="results"
-          />
-        </View>
-      ) : (
-        <View style={styles.recentSearchesContainer}>
-          <View style={styles.recentSearchesHeader}>
-            <Text style={styles.recentSearchesTitle}>Recent Searches</Text>
-            <TouchableOpacity onPress={handleClearAll}>
-              <Text style={styles.clearAllText}>Clear All</Text>
-            </TouchableOpacity>
+        {showResults ? (
+          <View style={styles.resultsContainer}>
+            <Text style={styles.resultsTitle}>
+              Result for '{searchQuery}'{' '}
+              <Text style={styles.resultsCount}>({searchResults.length} found)</Text>
+            </Text>
+            <FlatList
+              data={searchResults}
+              renderItem={renderSearchResult}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              contentContainerStyle={styles.resultsList}
+              keyboardShouldPersistTaps="handled"
+              key="results"
+            />
           </View>
-          <FlatList
-            data={recentSearches}
-            renderItem={renderRecentSearch}
-            keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={styles.recentSearchesList}
-            key="recent"
-          />
-        </View>
-      )}
-    </SafeAreaView>
+        ) : (
+          <View style={styles.recentSearchesContainer}>
+            <View style={styles.recentSearchesHeader}>
+              <Text style={styles.recentSearchesTitle}>Recent Searches</Text>
+              <TouchableOpacity onPress={handleClearAll}>
+                <Text style={styles.clearAllText}>Clear All</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={recentSearches}
+              renderItem={renderRecentSearch}
+              keyExtractor={(item, index) => index.toString()}
+              contentContainerStyle={styles.recentSearchesList}
+              keyboardShouldPersistTaps="handled"
+              key="recent"
+            />
+          </View>
+        )}
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 

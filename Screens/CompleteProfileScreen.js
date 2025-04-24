@@ -8,6 +8,8 @@ import {
   StyleSheet,
   Alert,
   Image,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -143,7 +145,7 @@ const CompleteProfileScreen = () => {
       console.log('Converting image to JPEG:', uri);
       const result = await ImageManipulator.manipulateAsync(
         uri,
-        [{ resize: { width: 512 } }], // Giảm kích thước nếu cần
+        [{ resize: { width: 512 } }],
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
       );
       const fileInfo = await FileSystem.getInfoAsync(result.uri);
@@ -184,12 +186,10 @@ const CompleteProfileScreen = () => {
 
         console.log('Step 1.5: File size:', fileInfo.size, 'bytes');
 
-        // Xác định định dạng và contentType
         let fileExt = mimeType?.split('/')[1]?.toLowerCase() || uri.split('.').pop().toLowerCase();
         let contentType = mimeType || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
         let convertedUri = uri;
 
-        // Xử lý HEIC hoặc định dạng không phải JPEG/PNG
         if (mimeType === 'image/heic' || !['image/jpeg', 'image/png'].includes(mimeType)) {
           console.log('Step 1.6: Converting non-JPEG/PNG image to JPEG');
           convertedUri = await convertToJpeg(uri);
@@ -200,7 +200,6 @@ const CompleteProfileScreen = () => {
         const fileName = `${userId}-${Date.now()}.${fileExt}`;
         const filePath = `public/${fileName}`;
 
-        // Đọc tệp dưới dạng ArrayBuffer
         console.log('Step 2: Reading file as binary');
         const fileData = await FileSystem.readAsStringAsync(convertedUri, {
           encoding: FileSystem.EncodingType.Base64,
@@ -228,7 +227,6 @@ const CompleteProfileScreen = () => {
 
         console.log('Step 3 Success: Upload response:', uploadData);
 
-        // Kiểm tra xem tệp đã được tải lên thành công
         const { data: listData, error: listError } = await supabase.storage
           .from('avatars')
           .list('public', { limit: 1, search: fileName });
@@ -254,14 +252,12 @@ const CompleteProfileScreen = () => {
 
         console.log('Step 4 Success: Avatar public URL:', urlData.publicUrl);
 
-        // Kiểm tra xem URL công khai có hoạt động không
         const responseCheck = await fetch(urlData.publicUrl);
         if (!responseCheck.ok) {
           console.error('Step 4.5 Error: Public URL is not accessible:', responseCheck.status);
           throw new Error('URL công khai không thể truy cập được.');
         }
 
-        // Kiểm tra Content-Type của URL
         const contentTypeHeader = responseCheck.headers.get('Content-Type');
         if (!contentTypeHeader?.startsWith('image/')) {
           console.error('Step 4.5 Error: Invalid Content-Type:', contentTypeHeader);
@@ -372,55 +368,57 @@ const CompleteProfileScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.avatarContainer}>
-        <Image
-          source={avatarUri ? { uri: avatarUri } : require('../assets/Frogg.png')}
-          style={styles.avatar}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <View style={styles.avatarContainer}>
+          <Image
+            source={avatarUri ? { uri: avatarUri } : require('../assets/Frogg.png')}
+            style={styles.avatar}
+          />
+          <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
+            <FontAwesome name="pencil" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.title}>Hoàn tất hồ sơ của bạn</Text>
+        <Text style={styles.subtitle}>Vui lòng cung cấp thêm thông tin</Text>
+
+        <Text style={styles.label}>Số điện thoại</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Nhập số điện thoại của bạn"
+          placeholderTextColor="#999"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          keyboardType="phone-pad"
         />
-        <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
-          <FontAwesome name="pencil" size={18} color="#fff" />
+
+        <Text style={styles.label}>Giới tính</Text>
+        <View style={styles.genderContainer}>
+          <TouchableOpacity
+            style={[styles.genderButton, gender === 'Men' && styles.genderButtonSelected]}
+            onPress={() => setGender('Men')}
+          >
+            <Text style={[styles.genderText, gender === 'Men' && styles.genderTextSelected]}>Nam</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.genderButton, gender === 'Female' && styles.genderButtonSelected]}
+            onPress={() => setGender('Female')}
+          >
+            <Text style={[styles.genderText, gender === 'Female' && styles.genderTextSelected]}>Nữ</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          onPress={handleCompleteProfile}
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.submitButtonText}>
+            {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất'}
+          </Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.title}>Hoàn tất hồ sơ của bạn</Text>
-      <Text style={styles.subtitle}>Vui lòng cung cấp thêm thông tin</Text>
-
-      <Text style={styles.label}>Số điện thoại</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập số điện thoại của bạn"
-        placeholderTextColor="#999"
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
-        keyboardType="phone-pad"
-      />
-
-      <Text style={styles.label}>Giới tính</Text>
-      <View style={styles.genderContainer}>
-        <TouchableOpacity
-          style={[styles.genderButton, gender === 'Men' && styles.genderButtonSelected]}
-          onPress={() => setGender('Men')}
-        >
-          <Text style={[styles.genderText, gender === 'Men' && styles.genderTextSelected]}>Nam</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.genderButton, gender === 'Female' && styles.genderButtonSelected]}
-          onPress={() => setGender('Female')}
-        >
-          <Text style={[styles.genderText, gender === 'Female' && styles.genderTextSelected]}>Nữ</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        onPress={handleCompleteProfile}
-        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-        disabled={isSubmitting}
-      >
-        <Text style={styles.submitButtonText}>
-          {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất'}
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
